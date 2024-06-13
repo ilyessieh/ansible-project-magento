@@ -1,0 +1,29 @@
+---
+# tasks file for php
+
+- name: Install php
+  apt: 
+    name: 
+    - 'php8.3' 
+    - 'php8.3-bcmath'
+    - 'php8.3-common'
+    - 'php8.3-curl' 
+    - 'php8.3-fpm'
+    - 'php8.3-gd'
+    - 'php8.3-intl'
+    - 'php8.3-mbstring'
+    - 'php8.3-mysql'
+    - 'php8.3-soap'
+    - 'php8.3-xml'
+    - 'php8.3-xsl'
+    - 'php8.3-zip'
+    - 'php8.3-cli'
+    state: present
+
+- name: shell commands
+  shell: |
+    sed -i "s/memory_limit = .*/memory_limit = 768M/" /etc/php/8.3/fpm/php.ini
+    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 128M/" /etc/php/8.3/fpm/php.ini
+    sed -i "s/zlib.output_compression = .*/zlib.output_compression = on/" /etc/php/8.3/fpm/php.ini
+    sed -i "s/max_execution_time = .*/max_execution_time = 18000/" /etc/php/8.3/fpm/php.ini
+  notify: restart php

@@ -1,0 +1,28 @@
+
+user_name: 'magento'
+root_password_new: ''
+root_password_old: ''
+user_password: ''
+db_name: 'magentodb'
+pub_key: 'CLE A SAISIR'
+pvt_key: 'CLE A SAISIR'
+db_host: '172.31.14.227'
+
+
+magento_dir: /var/www/magento2/
+magento_mode: default
+magento_ver: 2.4.7
+
+base_url: http://www.ansibleproject.ilyessieh-datascientest.cloudns.ph
+use_rewrites: 1
+
+
+language: fr_FR
+currency: EUR
+timezone: Europe/Paris
+backend_frontname: ilyess
+admin_firstname: ilyess
+admin_lastname: devops
+admin_email: ilyessdevops@gmail.com
+admin_user: user
+admin_password: password24

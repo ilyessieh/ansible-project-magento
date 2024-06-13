@@ -1,0 +1,20 @@
+---
+- name: Install MySQL
+  hosts: db
+  become: yes
+ 
+  
+  roles:
+    - mysql
+
+- name: Install Magento
+  hosts: web
+  become: yes
+ 
+  roles:
+    #- mysql
+    - nginx
+    - php
+    - elasticsearch
+    - composer
+    - magento

@@ -1,0 +1,15 @@
+---
+# handlers file for magento
+
+- name: restart elasticsearch
+  service: 
+    name: elasticsearch
+    state: restarted
+    enabled: yes
+
+
+- name: restart nginx
+  ansible.builtin.service:
+    name: nginx
+    enabled: yes
+    state: restarted

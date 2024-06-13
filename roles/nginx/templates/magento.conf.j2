@@ -1,0 +1,15 @@
+upstream fastcgi_backend {
+server unix:/run/php/php8.3-fpm.sock;
+}
+
+server {
+server_name ansibleproject.ilyessieh-datascientest.cloudns.ph www.ansibleproject.ilyessieh-datascientest.cloudns.ph ;
+listen 80;
+set $MAGE_ROOT {{ magento_dir }};
+set $MAGE_MODE developer; # or production
+
+access_log /var/log/nginx/magento2-access.log;
+error_log /var/log/nginx/magento2-error.log;
+
+include {{ magento_dir }}nginx.conf.sample;
+}

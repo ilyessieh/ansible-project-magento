@@ -1,0 +1,36 @@
+---
+# tasks file for nginx
+- name: Update Repository and Full Upgrade Packages
+  apt:
+    update_cache: yes
+    upgrade: full 
+
+- name: install nginx
+  apt: 
+    name: nginx
+    state: present
+
+- name: unlink default file
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+
+- name: create own magento conf file
+  template: 
+    #src: ./files/magento
+    src: ./templates/magento.conf.j2
+    dest: /etc/nginx/sites-enabled/magento.conf
+  #notify: restart nginx
+#- name: restart nginx
+ # service:
+  #  name: nginx
+   # state: restarted
+    #enabled: yes
+
+#- name: create own magento conf file
+ # copy: 
+    #src: ./files/magento
+  #  src: ./templates/magento.conf.j2
+   # dest: /etc/nginx/sites-enabled/magento.conf
+  #notify: restart nginx

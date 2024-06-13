@@ -1,0 +1,133 @@
+---
+# tasks file for magento
+
+- name: start elasticsearch
+  service: 
+    name: elasticsearch
+    state: started
+    enabled: yes
+
+- name: Set Magento Access Keys for Composer
+  shell: |
+    export COMPOSER_ALLOW_SUPERUSER=1;
+    composer global config http-basic.repo.magento.com "{{ pub_key }}" "{{ pvt_key }}"
+
+# - name: Create the Magento Open Source Project
+#   shell: |
+#     export COMPOSER_ALLOW_SUPERUSER=1;
+#     composer create-project --repository=https://repo.magento.com/ magento/project-community-edition=2.4.3 {{ magento_dir }}
+
+
+- name: create magento directory 
+  file:
+    path: "{{ magento_dir }}"
+    state: directory
+
+
+- name: download magento files 
+  shell: |
+    wget https://github.com/magento/magento2/archive/{{ magento_ver }}.tar.gz 
+    tar -zxvf {{ magento_ver }}.tar.gz --strip-components=1
+    rm {{ magento_ver }}.tar.gz
+  args:
+    chdir: "{{ magento_dir }}"
+
+- name: Set Files Permissions to g+w
+  shell: find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} \;
+  args:
+    chdir: "{{ magento_dir }}"
+
+- name: Set Directories Permissions to g+ws
+  shell: find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} \;
+  args:
+    chdir: "{{ magento_dir }}"
+
+- name: Set Files and Directories Group User
+  file:
+    dest: "{{ magento_dir }}"
+    group: www-data
+    recurse: yes
+
+- name: Set Permission u+x to bin/magento
+  file:
+    path: "{{ magento_dir }}/bin/magento"
+    mode: u+x
+  notify: restart elasticsearch
+
+- name: Install Composer update
+  shell: |
+    composer self-update --2
+  become: yes
+
+- name: Install Composer dependencies
+  shell: |
+    composer install --no-interaction
+  args:
+    chdir: "{{ magento_dir }}"
+  become: yes
+
+- name: Install Magento
+  shell: |
+    php bin/magento setup:install \
+    --base-url="{{ base_url }}" \
+    --db-host="{{ db_host }}" \
+    --db-name="{{ db_name }}" \
+    --db-user="{{ user_name }}" \
+    --db-password="{{ user_password }}" \
+    --backend-frontname="{{ backend_frontname }}" \
+    --admin-firstname="{{ admin_firstname }}" \
+    --admin-lastname="{{ admin_lastname }}" \
+    --admin-email="{{ admin_email }}" \
+    --admin-user="{{ admin_user }}" \
+    --admin-password="{{ admin_password }}" \
+    --language="{{ language }}" \
+    --currency="{{ currency }}" \
+    --timezone="{{ timezone }}" \
+    --use-rewrites="{{ use_rewrites }}"
+  args:
+    chdir: "{{ magento_dir }}"
+  register: output  
+
+- name: Printing.. output of magento installation
+  debug:
+    msg: " {{ output.stdout }}"
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: 
+  shell: |
+    sudo -u www-data bin/magento module:disable Magento_TwoFactorAuth
+    sudo -u www-data bin/magento cache:flush
+  args:
+    chdir: "{{ magento_dir }}"
+  register: output
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: run magento default group cron job
+  shell: |
+    sudo bin/magento cron:install
+  args:
+    chdir: "{{ magento_dir }}"
+  register: output
+  
+- name: run magento default group cron job
+  shell: |
+    sudo bin/magento cron:run --group default
+  args:
+    chdir: "{{ magento_dir }}"
+  register: output
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes

@@ -1,0 +1,67 @@
+---
+# tasks file for mysql
+- name: Update Repository and Full Upgrade Packages
+  apt:
+    update_cache: yes
+    upgrade: full 
+
+- name: Install all required packages for mysql
+  apt: 
+    name: ['mysql-client', 'mysql-server', 'python3-mysqldb']
+    state: present
+
+
+- name: altering root password
+  ansible.builtin.mysql_user:
+    name: root    
+    host: localhost
+    password: "{{root_password_new}}"
+    login_user: root
+    login_password: "{{root_password_old}}"
+    login_host: localhost
+    
+
+- name: Remove all anonymous user accounts
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: root
+    login_password: "{{ root_password_new }}"
+
+
+- name: Remove the MySQL test database
+  mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ root_password_new }}"
+
+
+
+
+- name: commenting bind address
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: 'bind-address		= 127.0.0.1'
+    state: absent
+  notify: restart mysql
+   
+  
+- name: create a database
+  community.mysql.mysql_db:
+    name: "{{db_name}}"
+    state: present
+    login_user: root
+    login_password: "{{ root_password_new }}"
+    login_unix_socket: /run/mysqld/mysqld.sock  
+
+
+- name: creating a new user
+  ansible.builtin.mysql_user:
+    login_user: root
+    login_password: "{{root_password_new}}"
+    user: "{{user_name}}"
+    password: "{{user_password}}"
+    priv: '{{db_name}}.*:ALL,GRANT'
+    host: '%'
